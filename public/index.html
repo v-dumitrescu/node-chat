@@ -4,9 +4,29 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Node Chat</title>
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="/css/index.css" />
 </head>
 <body>
   
+  <div class="container">
+    <div class="sidebar-left">
+      <form>
+        <div>
+          <label for="username">Username</label>
+          <input type="text" id="username" />
+        </div>
+        <div>
+          <label for="room">Room</label>
+          <input type="text" id="room" />
+        </div>
+      </form>
+    </div>
+
+    <div class="right-landing-page">
+      <h1>node-chat</h1>
+    </div>
+  </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/script.js"></script>

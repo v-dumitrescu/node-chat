@@ -1,0 +1,31 @@
+.sidebar-left {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 380px;   
+  height: 100vh;
+  background: #202022;
+  color: #efefef;
+  font-size: 1.7rem;
+}
+
+.sidebar-left form div {
+  margin: 15px 0;
+}
+
+.sidebar-left form label {
+  display: block;
+}
+
+.sidebar-left form input {
+  font-size: 1.2rem;
+  padding: 5px 0;
+  border-radius: 3px;
+}
+
+.right-landing-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
