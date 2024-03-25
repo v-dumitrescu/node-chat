@@ -29,3 +29,20 @@
   align-items: center;
   width: 100%;
 }
+
+#index-form button {
+  display: block;
+  width: 100%;
+  margin: 20px 0;
+  font-size: 1.4rem;
+  cursor: pointer;
+  border: 0;
+  border-radius: 3px;
+  background-color: #ACACC2;
+  color: #fff;
+}
+
+#index-form button:hover {
+  background-color: #D6EAFC;
+  color: #0A0D26;
+}
