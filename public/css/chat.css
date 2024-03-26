@@ -20,6 +20,27 @@
   height: 100vh;
   overflow-y: scroll;
   background-color: #B4BEC9;
+  text-align: center;
+}
+
+.sidebar-right h3 {
+  margin-top: 15px;
+  color:#202022;
+}
+
+.sidebar-right li {
+  list-style:none;
+  margin: 7px 0;
+}
+
+.sidebar-right li a {
+  color:#202022;
+  text-decoration: none;
+
+}
+
+.sidebar-right li a:hover {
+  color:slateblue;
 }
 
 .user-messages {

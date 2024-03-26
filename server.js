@@ -1,4 +1,4 @@
-const { setUser } = require('./functions/users');
+const { setUser, setRoomUsers } = require('./functions/users');
 const http = require('http');
 const path = require('path');
 const express = require('express');
@@ -15,14 +15,16 @@ io.on('connection', (socket) => {
 
   socket.on('join', (obj, ack) => {
     const { username, room, error } = setUser(obj.username, obj.room);
+    const setUsersList = setRoomUsers(room);
 
     if(error) {
       return ack(error);
     }
 
     socket.join(room);
-    io.to(room).emit('message', `${username} has joined`);
-    ack(null, username);
+    io.to(room).emit('setUserInList', username);
+    io.to(room).emit('joinMessage', `${username} has joined`);
+    ack(null, username, setUsersList);
   });
 
   io.on('disconnect', () => {

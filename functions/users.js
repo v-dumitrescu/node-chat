@@ -30,6 +30,12 @@ const setUser = (setUsername, setRoom) => {
   return setNewUser;
 };
 
+const setRoomUsers = (room) => {
+  const setUsers = users.filter(user => user.room === room);
+  return setUsers;
+};
+
 module.exports = {
-  setUser
+  setUser,
+  setRoomUsers
 };

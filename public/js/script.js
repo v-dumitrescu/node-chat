@@ -8,13 +8,24 @@ function htmlEncode(str) {
   });
 }
 
+const fetchUsers = (users, element) => {
+  console.log('executed');
+  users.forEach(user => {
+    element.innerHTML += `
+      <ul id="users-list">
+        <li><a href="#">${htmlEncode(user.username)}</a></li>
+      </ul>
+    `
+  });
+};
+
 form.addEventListener('submit', e => {
   e.preventDefault();
 
   socket.emit('join', {
     username: e.target.username.value,
     room: e.target.room.value
-  }, (error, username) => {
+  }, (error, username, users) => {
     if (error) {
       return alert(error);
     }
@@ -26,7 +37,9 @@ form.addEventListener('submit', e => {
         const domParser = new DOMParser();
         const responseData = this.responseText;
         const doc = domParser.parseFromString(responseData, 'text/html');
-        doc.querySelector('.user-messages').innerHTML += `<p>${htmlEncode(username)} has joined</p>`;
+        const sidebarLeft = doc.querySelector('.sidebar-right');
+        fetchUsers(users, sidebarLeft);
+        doc.querySelector('.user-messages').innerHTML += `<p><em>${htmlEncode(username)} has joined</em></p>`;
         const setDocInnerHtml = doc.querySelector('html').innerHTML;
         document.querySelector('html').innerHTML = setDocInnerHtml;
       }
@@ -37,9 +50,20 @@ form.addEventListener('submit', e => {
 
 new MutationObserver(() => {
   const setMessagesContainer = document.querySelector('.user-messages');
-  socket.on('message', (msg) => {
-    setMessagesContainer.innerHTML += `<p>${htmlEncode(msg)}</p>`;
+  const setUsersList = document.querySelector('#users-list');
+
+  socket.on('joinMessage', msg => {
+    setMessagesContainer.innerHTML += `<p><em>${htmlEncode(msg)}</em></p>`;
   });
+
+  socket.on('message', (msg) => {
+
+  });
+
+  socket.on('setUserInList', username => {
+    setUsersList.insertAdjacentHTML('beforeend', `<li><a href="#">${htmlEncode(username)}</a></li>`); 
+  });
+
 }).observe(
   document.querySelector('html'),
   {
