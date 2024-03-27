@@ -9,12 +9,9 @@ function htmlEncode(str) {
 }
 
 const fetchUsers = (users, element) => {
-  console.log('executed');
   users.forEach(user => {
     element.innerHTML += `
-      <ul id="users-list">
         <li><a href="#">${htmlEncode(user.username)}</a></li>
-      </ul>
     `
   });
 };
@@ -38,7 +35,8 @@ form.addEventListener('submit', e => {
         const responseData = this.responseText;
         const doc = domParser.parseFromString(responseData, 'text/html');
         const sidebarLeft = doc.querySelector('.sidebar-right');
-        fetchUsers(users, sidebarLeft);
+        const usersList = sidebarLeft.querySelector('.users-list');
+        fetchUsers(users, usersList);
         doc.querySelector('.user-messages').innerHTML += `<p><em>${htmlEncode(username)} has joined</em></p>`;
         const setDocInnerHtml = doc.querySelector('html').innerHTML;
         document.querySelector('html').innerHTML = setDocInnerHtml;
@@ -50,7 +48,7 @@ form.addEventListener('submit', e => {
 
 new MutationObserver(() => {
   const setMessagesContainer = document.querySelector('.user-messages');
-  const setUsersList = document.querySelector('#users-list');
+  const setUsersList = document.querySelector('.users-list');
 
   socket.on('joinMessage', msg => {
     setMessagesContainer.innerHTML += `<p><em>${htmlEncode(msg)}</em></p>`;
