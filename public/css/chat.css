@@ -47,6 +47,10 @@
   flex-grow: 1;
 }
 
+.chat-message {
+  margin: 7px 0;
+}
+
 form {
   margin-top: 10px;
   display: flex;

@@ -1,6 +1,6 @@
 const users = [];
 
-const setUser = (setUsername, setRoom) => {
+const setUser = (setId, setUsername, setRoom) => {
 
   const username = setUsername.trim().toLowerCase();
   const room = setRoom.trim().toLowerCase();
@@ -22,6 +22,7 @@ const setUser = (setUsername, setRoom) => {
   }
 
   const setNewUser = {
+    id: setId,
     username,
     room
   }
@@ -35,7 +36,12 @@ const setRoomUsers = (room) => {
   return setUsers;
 };
 
+const getUser = id => {
+  return users.find(user => user.id === id);
+};
+
 module.exports = {
   setUser,
-  setRoomUsers
+  setRoomUsers,
+  getUser
 };

@@ -1,4 +1,4 @@
-const { setUser, setRoomUsers } = require('./functions/users');
+const { setUser, setRoomUsers, getUser } = require('./functions/users');
 const http = require('http');
 const path = require('path');
 const express = require('express');
@@ -14,7 +14,7 @@ const io = socketio(server);
 io.on('connection', (socket) => {
 
   socket.on('join', (obj, ack) => {
-    const { username, room, error } = setUser(obj.username, obj.room);
+    const { username, room, error } = setUser(socket.id, obj.username, obj.room);
     const setUsersList = setRoomUsers(room);
 
     if(error) {
@@ -27,8 +27,14 @@ io.on('connection', (socket) => {
     ack(null, username, setUsersList);
   });
 
-  io.on('disconnect', () => {
+  socket.on('message', (msg, ack) => {
+    const { username, room } = getUser(socket.id);
+    io.to(room).emit('message', `${username}: ${msg}`);
+    ack();
+  });
 
+  io.on('disconnect', () => {
+    
   });
 });
 

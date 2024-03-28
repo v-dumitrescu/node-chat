@@ -47,15 +47,31 @@ form.addEventListener('submit', e => {
 });
 
 new MutationObserver(() => {
+  // Elements
   const setMessagesContainer = document.querySelector('.user-messages');
   const setUsersList = document.querySelector('.users-list');
+  const chatForm = document.querySelector('#chat-form');
+  const button = chatForm.querySelector('button');
+
+  chatForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const message = e.target['input-msg'];
+    button.setAttribute('disabled', true);
+    button.style.backgroundColor = '#ccc';
+    socket.emit('message', message.value, () => {
+      message.value = '';
+      message.focus();
+      button.removeAttribute('disabled');
+      button.style.backgroundColor = '#66CAF2';
+     });
+  });
 
   socket.on('joinMessage', msg => {
-    setMessagesContainer.innerHTML += `<p><em>${htmlEncode(msg)}</em></p>`;
+    setMessagesContainer.innerHTML += `<p class="chat-message"><em>${htmlEncode(msg)}</em></p>`;
   });
 
   socket.on('message', (msg) => {
-
+    setMessagesContainer.innerHTML += `<p class="chat-message">${htmlEncode(msg)}</p>`;
   });
 
   socket.on('setUserInList', username => {
