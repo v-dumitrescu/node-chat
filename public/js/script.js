@@ -11,7 +11,7 @@ function htmlEncode(str) {
 const fetchUsers = (users, element) => {
   users.forEach(user => {
     element.innerHTML += `
-        <li><a href="#">${htmlEncode(user.username)}</a></li>
+        <li><a href="#" data-id="${user.id}">${htmlEncode(user.username)}</a></li>
     `
   });
 };
@@ -35,7 +35,7 @@ form.addEventListener('submit', e => {
         const responseData = this.responseText;
         const doc = domParser.parseFromString(responseData, 'text/html');
         const sidebarLeft = doc.querySelector('.sidebar-right');
-        const usersList = sidebarLeft.querySelector('.users-list');
+        const usersList = sidebarLeft.querySelector('.room-users-list');
         fetchUsers(users, usersList);
         doc.querySelector('.user-messages').innerHTML += `<p><em>${htmlEncode(username)} has joined</em></p>`;
         const setDocInnerHtml = doc.querySelector('html').innerHTML;
@@ -49,9 +49,24 @@ form.addEventListener('submit', e => {
 new MutationObserver(() => {
   // Elements
   const setMessagesContainer = document.querySelector('.user-messages');
-  const setUsersList = document.querySelector('.users-list');
+  const setUsersList = document.querySelector('.room-users-list');
   const chatForm = document.querySelector('#chat-form');
+  const privateMessagesSection = document.querySelector('.private-users-section');
+  const privateMessagesUsersList = document.querySelector('.private-users-list');
   const button = chatForm.querySelector('button');
+
+  setUsersList.addEventListener('click', (e) => {
+    if (e.target.tagName === 'A' && e.target.getAttribute('data-id') !== socket.id) {
+      privateMessagesSection.style.display = 'block';
+      const privateUsersList = privateMessagesUsersList.querySelectorAll('.user');
+      const users = [...privateUsersList];
+      const existingUser = users.find(user => user.textContent === e.target.textContent);
+
+      if (!existingUser) {
+        privateMessagesUsersList.innerHTML += `<li class="user"><a href="#">${htmlEncode(e.target.textContent)}</a></li>`;
+      }
+    }
+  });
 
   chatForm.addEventListener('submit', e => {
     e.preventDefault();
@@ -63,7 +78,7 @@ new MutationObserver(() => {
       message.focus();
       button.removeAttribute('disabled');
       button.style.backgroundColor = '#66CAF2';
-     });
+    });
   });
 
   socket.on('joinMessage', msg => {
@@ -75,7 +90,7 @@ new MutationObserver(() => {
   });
 
   socket.on('setUserInList', username => {
-    setUsersList.insertAdjacentHTML('beforeend', `<li><a href="#">${htmlEncode(username)}</a></li>`); 
+    setUsersList.insertAdjacentHTML('beforeend', `<li><a href="#">${htmlEncode(username)}</a></li>`);
   });
 
 }).observe(
