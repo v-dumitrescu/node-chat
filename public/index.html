@@ -1,36 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Node Chat</title>
-  <link rel="stylesheet" href="/css/main.css" />
-  <link rel="stylesheet" href="/css/index.css" />
-</head>
-<body>
-  
-  <div class="container">
-    <div class="sidebar-left">
-      <form id="index-form">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Node Chat</title>
+    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/css/index.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="sidebar-left">
+        <form id="index-form">
+          <div>
+            <label for="username">Username</label>
+            <input type="text" id="username" />
+          </div>
+          <div>
+            <label for="room">Room</label>
+            <input type="text" id="room" />
+          </div>
+          <button>Join</button>
+        </form>
+      </div>
+
+      <div class="right-landing-page">
         <div>
-          <label for="username">Username</label>
-          <input type="text" id="username" />
+          <h1>Node Chat</h1>
+          <p>Free and open source software for communication</p>
         </div>
-        <div>
-          <label for="room">Room</label>
-          <input type="text" id="room" />
-        </div>
-        <button>Join</button>
-      </form>
+      </div>
     </div>
 
-    <div class="right-landing-page">
-      <h1>node-chat</h1>
-    </div>
-  </div>
-
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="/js/script.js"></script>
-
-</body>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/script.js"></script>
+  </body>
 </html>
