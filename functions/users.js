@@ -1,4 +1,5 @@
 const users = [];
+const messages = [];
 
 const setUser = (setId, setUsername, setRoom) => {
 
@@ -15,7 +16,7 @@ const setUser = (setId, setUsername, setRoom) => {
     return user.username === username && user.room === room;
   });
 
-  if(user) {
+  if (user) {
     return {
       error: 'Username already in use!'
     }
@@ -36,12 +37,38 @@ const setRoomUsers = (room) => {
   return setUsers;
 };
 
-const getUser = id => {
+const getUserById = id => {
   return users.find(user => user.id === id);
+};
+
+const getUserByUsername = username => {
+  return users.find(user => user.username === username);
+};
+
+const setMessage = (to, from, message) => {
+  messages.push({
+    to,
+    from,
+    message
+  });
+};
+
+const getRoomMessages = (room) => {
+  return messages.filter(msg => msg.to === room);
+};
+
+const getPrivateMessages = (to, from) => {
+  return messages.filter(msg => {
+    return msg.from === from && msg.to === to || msg.from === to && msg.to === from;
+  });
 };
 
 module.exports = {
   setUser,
   setRoomUsers,
-  getUser
+  getUserById,
+  getUserByUsername,
+  setMessage,
+  getRoomMessages,
+  getPrivateMessages
 };

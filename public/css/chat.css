@@ -1,5 +1,5 @@
 .sidebar-left {
-  width: 380px;   
+  width: 380px;
   height: 100vh;
   background: #202022;
   overflow-y: scroll;
@@ -20,17 +20,17 @@
   width: 380px;
   height: 100vh;
   overflow-y: scroll;
-  background-color: #B4BEC9;
+  background-color: #b4bec9;
   text-align: center;
 }
 
-.public-users-section h4,
-.private-users-section h4 {
+.public-users-container h4,
+.private-users-container h4 {
   margin: 15px 0;
 }
 
-.public-users-section h4 {
-  color:#202022;
+.public-users-container h4 {
+  color: #202022;
 }
 
 .room-users-list,
@@ -49,11 +49,11 @@
 }
 
 .room-users-list li a {
-  color:#202022;
+  color: #202022;
 }
 
 .room-users-list li a:hover {
-  color: #308AD9;
+  color: #308ad9;
 }
 
 .user-messages {
@@ -64,13 +64,13 @@
   margin: 7px 0;
 }
 
-.public-users-section,
-.private-users-section {
+.public-users-container,
+.private-users-container {
   text-align: center;
   margin-top: 15px;
 }
 
-.private-users-section {
+.private-users-container.hidden {
   display: none;
 }
 
@@ -80,7 +80,7 @@
 }
 
 .private-users-list li a {
-  color: #66CAF2;
+  color: #66caf2;
 }
 
 .private-users-list li a:hover {
@@ -97,14 +97,18 @@ form input {
   padding: 8px;
   border-radius: 5px;
   border: 0;
-  background-color: #E4E4E8;
+  background-color: #e4e4e8;
 }
 
 form button {
-  background-color: #66CAF2;
+  background-color: #66caf2;
   cursor: pointer;
   padding: 10px;
   border: 0;
   width: 12%;
   color: #ffffff;
+}
+
+.button-disabled {
+  color: #ccc;
 }
