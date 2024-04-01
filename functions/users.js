@@ -3,7 +3,7 @@ const messages = [];
 
 const setUser = (setId, setUsername, setRoom) => {
 
-  const username = setUsername.trim().toLowerCase();
+  let username = setUsername.trim().toLowerCase();
   const room = setRoom.trim().toLowerCase();
 
   if (!username || !room) {
@@ -17,9 +17,7 @@ const setUser = (setId, setUsername, setRoom) => {
   });
 
   if (user) {
-    return {
-      error: 'Username already in use!'
-    }
+    username = username + Math.floor(Math.random() * 1000) + 1;
   }
 
   const setNewUser = {

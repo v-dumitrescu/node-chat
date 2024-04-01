@@ -43,6 +43,7 @@
   margin-bottom: 10px;
 }
 
+.rooms-list li a,
 .room-users-list li a,
 .private-users-list li a {
   text-decoration: none;
@@ -79,12 +80,30 @@
   font-size: 1.05rem;
 }
 
+.rooms-list li a,
 .private-users-list li a {
   color: #66caf2;
 }
 
+.rooms-list li a:hover,
 .private-users-list li a:hover {
   color: #efefef;
+}
+
+.joined-rooms {
+  margin: 15px 0 15px 15px;
+}
+
+.room {
+  margin-top: 5px;
+}
+
+.rooms-list {
+  list-style: none;
+}
+
+.rooms-list li {
+  margin-top: 7px;
 }
 
 form {

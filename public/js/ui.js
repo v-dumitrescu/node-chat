@@ -4,15 +4,16 @@ const transformPage = (error, username, room, users) => {
   }
   messageAuthor = username;
   sendMessageTo = room;
-  setXhrRequest('GET', '../chat.html', setChatPage(username, users));
+  setXhrRequest('GET', '../chat.html', setChatPage(room, username, users));
 };
 
-const setChatPage = (username, users) => {
+const setChatPage = (room, username, users) => {
   return function () {
     if (this.status === 200 && this.readyState === 4) {
       const domParser = new DOMParser();
       const responseData = this.responseText;
       const chatPage = domParser.parseFromString(responseData, 'text/html');
+      setJoinedRoom(chatPage, '.rooms-list', room);
       const roomUsersList = chatPage.querySelector('.room-users-list')
       fetchUsers(users, roomUsersList);
       chatPage.querySelector('.user-messages').innerHTML += `<p><em>${htmlEncode(username)} has joined</em></p>`;
@@ -22,6 +23,11 @@ const setChatPage = (username, users) => {
   }
 };
 
+const setJoinedRoom = (element, identifier, room) => {
+  element.querySelector(identifier).innerHTML += `<li class="room"><a href="#">${htmlEncode(room)}</a></li>`;
+};
+
+// Refactor to reusable for users and rooms
 const setUserToSidebarList = (listOfUsers, userId, userName) => {
   const listItem = document.createElement('li');
   const liClassAttribute = document.createAttribute('class');
@@ -65,16 +71,22 @@ const domContentLoaded = () => {
     element.innerHTML += `<p class="chat-message"><em>${htmlEncode(message)}</em></p>`;
   }
 
-  const fetchPrivateMessages = (e) => {
-    if (e.target.tagName === 'A' && e.target.getAttribute('data-id') !== socket.id) {
+  const fetchMessages = (e) => {
+    if (e.target.parentElement.classList.contains('user') && e.target.getAttribute('data-id') !== socket.id) {
       userMessagesContainer.innerHTML = '';
-      sendMessageTo = e.target.getAttribute('data-id');
-      privateMessage = true;
 
       socket.emit('getPrivateMessages', {
         to: sendMessageTo,
         from: messageAuthor
       }, (messages) => {
+        messages.forEach(msg => {
+          setUserMessage(userMessagesContainer, msg.from, msg.message);
+        });
+      });
+    } else if (e.target.parentElement.classList.contains('room')) {
+      const room = e.target.textContent;
+      socket.emit('getRoomMessages', room, (messages) => {
+        userMessagesContainer.innerHTML = '';
         messages.forEach(msg => {
           setUserMessage(userMessagesContainer, msg.from, msg.message);
         });
@@ -88,23 +100,34 @@ const domContentLoaded = () => {
     }
   };
 
-  const onUserOfRoomClick = (e) => {
-    if (e.target.getAttribute('data-id') === socket.id) {
-      return e.preventDefault();
-    }
+  // Refactor to reusable for users and rooms
+  const onItemOfSidebarClick = (e) => {
 
-    if (e.target.tagName === 'A' && e.target.getAttribute('data-id') !== socket.id) {
+    if (e.target.parentElement.classList.contains('user')) {
+      const userElement = e.target;
 
-      displayPrivateUserList(privateUsersContainer);
-      const userName = e.target.textContent;
-      const existingUser = checkExistingSidebarUser(sidebarLeft, '.user', userName);
+      if (userElement.getAttribute('data-id') === socket.id) {
+        return e.preventDefault();
+      }
 
-      const targetElementUserId = e.target.getAttribute('data-id');
-      const targetElementUserName = e.target.textContent;
-      existingUser ?? setUserToSidebarList(privateMessagesUserList, targetElementUserId, targetElementUserName);
+      if (userElement.getAttribute('data-id') !== socket.id) {
+        sendMessageTo = userElement.getAttribute('data-id');
+        privateMessage = true;
+        displayPrivateUserList(privateUsersContainer);
+        const userName = userElement.textContent;
+        const existingUser = checkExistingSidebarUser(sidebarLeft, '.user', userName);
+        existingUser ?? setUserToSidebarList(privateMessagesUserList, userElement.getAttribute('data-id'), userName);
+        fetchMessages(e);
+      }
+    } else if (e.target.parentElement.classList.contains('room')) {
+      privateMessage = false;
+      const room = e.target.textContent;
+      sendMessageTo = room;
+      fetchMessages(e);
     }
   }
 
+  // Refactor to reusable for users and rooms
   const checkExistingSidebarUser = (sidebarElement, classOfUserElements, userName) => {
     const sidebar = sidebarElement.querySelectorAll(classOfUserElements);
     const setSidebarArray = [...sidebar];
@@ -115,6 +138,11 @@ const domContentLoaded = () => {
   const onFormSubmission = e => {
     e.preventDefault();
     const message = e.target['input-msg'];
+    if (!message.value.trim()) {
+      alert('Message cannot be empty');
+      e.target.reset();
+      return message.focus();
+    }
     button.setAttribute('disabled', true);
     button.classList.add('button-disabled');
     let messageType = privateMessage ? 'private message' : 'room message';
@@ -140,11 +168,8 @@ const domContentLoaded = () => {
   }
 
   // User Events
-  roomUsersList.addEventListener('click', (e) => {
-    fetchPrivateMessages(e);
-    onUserOfRoomClick(e);
-  });
-  privateMessagesUserList.addEventListener('click', fetchPrivateMessages);
+  sidebarRight.addEventListener('click', onItemOfSidebarClick);
+  sidebarLeft.addEventListener('click', onItemOfSidebarClick);
   sidebarRight.addEventListener('mousemove', (e) => {
     if (e.target.getAttribute('data-id') === socket.id) {
       e.target.style.cursor = 'text';
@@ -155,7 +180,9 @@ const domContentLoaded = () => {
 
   // Socket.io Events
   socket.on('joinMessage', msg => {
-    setNotificationMessage(userMessagesContainer, msg);
+    if (!privateMessage) {
+      setNotificationMessage(userMessagesContainer, msg);
+    }
   });
 
   socket.on('room message', ({ from, message }) => {
@@ -173,7 +200,7 @@ const domContentLoaded = () => {
       if (!checkExistingSidebarUser(sidebarLeft, '.user', from)) {
         new Audio('sound/notification.wav').play();
         setUserToSidebarList(privateMessagesUserList, senderId, from);
-        return setNotificationMessage(userMessagesContainer, `New private message from ${from}`);
+        setNotificationMessage(userMessagesContainer, `New private message from ${from}`);
       }
     } else {
       setUserMessage(userMessagesContainer, from, message);

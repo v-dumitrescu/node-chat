@@ -3,7 +3,8 @@ const { setUser,
   getUserById,
   getUserByUsername,
   setMessage,
-  getPrivateMessages
+  getPrivateMessages,
+  getRoomMessages
 } = require('./functions/users');
 
 const http = require('http');
@@ -63,6 +64,11 @@ io.on('connection', (socket) => {
     const id = to;
     const { username } = getUserById(id);
     const messages = getPrivateMessages(username, from);
+    ack(messages);
+  });
+
+  socket.on('getRoomMessages', (room, ack) => {
+    const messages = getRoomMessages(room);
     ack(messages);
   });
 
