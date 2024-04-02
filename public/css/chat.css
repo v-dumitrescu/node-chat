@@ -111,12 +111,17 @@ form {
   display: flex;
 }
 
+.input-search,
 form input {
   width: 100%;
   padding: 8px;
   border-radius: 5px;
   border: 0;
   background-color: #e4e4e8;
+}
+
+.input-search {
+  margin-top: 10px;
 }
 
 form button {

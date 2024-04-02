@@ -58,6 +58,7 @@ const domContentLoaded = () => {
   const sidebarRight = document.querySelector('.sidebar-right');
   const privateUsersContainer = document.querySelector('.private-users-container');
   const privateMessagesUserList = document.querySelector('.private-users-list');
+  const inputSearch = document.querySelector('.input-search');
   const button = chatForm.querySelector('button');
 
   // Functions
@@ -177,6 +178,19 @@ const domContentLoaded = () => {
   });
 
   chatForm.addEventListener('submit', onFormSubmission);
+
+  inputSearch.addEventListener('keyup', function (e) {
+    const value = this.value.trim().toLowerCase();
+    const roomUsers = roomUsersList.querySelectorAll('li');
+
+    roomUsers.forEach(userElement => {
+      if (userElement.textContent.indexOf(value) !== -1) {
+        userElement.style.display = 'block';
+      } else {
+        userElement.style.display = 'none';
+      }
+    });
+  });
 
   // Socket.io Events
   socket.on('joinMessage', msg => {
