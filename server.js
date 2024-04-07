@@ -67,9 +67,10 @@ io.on('connection', (socket) => {
     ack(messages);
   });
 
-  socket.on('getRoomMessages', (room, ack) => {
+  socket.on('getRoomUsersAndMessages', (room, ack) => {
+    const users = setRoomUsers(room);
     const messages = getRoomMessages(room);
-    ack(messages);
+    ack(users, messages);
   });
 
   io.on('disconnect', () => {

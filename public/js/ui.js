@@ -14,7 +14,7 @@ const setChatPage = (room, username, users) => {
       const responseData = this.responseText;
       const chatPage = domParser.parseFromString(responseData, 'text/html');
       setJoinedRoom(chatPage, '.rooms-list', room);
-      const roomUsersList = chatPage.querySelector('.room-users-list')
+      const roomUsersList = chatPage.querySelector('.room-users-list');
       fetchUsers(users, roomUsersList);
       chatPage.querySelector('.user-messages').innerHTML += `<p><em>${htmlEncode(username)} has joined</em></p>`;
       const chatPageRootHtmlContent = chatPage.querySelector('html').innerHTML;
@@ -27,7 +27,6 @@ const setJoinedRoom = (element, identifier, room) => {
   element.querySelector(identifier).innerHTML += `<li class="room"><a href="#">${htmlEncode(room)}</a></li>`;
 };
 
-// Refactor to reusable for users and rooms
 const setUserToSidebarList = (listOfUsers, userId, userName) => {
   const listItem = document.createElement('li');
   const liClassAttribute = document.createAttribute('class');
@@ -59,6 +58,7 @@ const domContentLoaded = () => {
   const privateUsersContainer = document.querySelector('.private-users-container');
   const privateMessagesUserList = document.querySelector('.private-users-list');
   const inputSearch = document.querySelector('.input-search');
+  const joinRoomForm = document.querySelector('.join-room-form');
   const button = chatForm.querySelector('button');
 
   // Functions
@@ -86,11 +86,13 @@ const domContentLoaded = () => {
       });
     } else if (e.target.parentElement.classList.contains('room')) {
       const room = e.target.textContent;
-      socket.emit('getRoomMessages', room, (messages) => {
+      socket.emit('getRoomUsersAndMessages', room, (users, messages) => {
         userMessagesContainer.innerHTML = '';
         messages.forEach(msg => {
           setUserMessage(userMessagesContainer, msg.from, msg.message);
         });
+        roomUsersList.innerHTML = '';
+        fetchUsers(users, roomUsersList);
       });
     }
   }
@@ -101,7 +103,6 @@ const domContentLoaded = () => {
     }
   };
 
-  // Refactor to reusable for users and rooms
   const onItemOfSidebarClick = (e) => {
 
     if (e.target.parentElement.classList.contains('user')) {
@@ -116,7 +117,7 @@ const domContentLoaded = () => {
         privateMessage = true;
         displayPrivateUserList(privateUsersContainer);
         const userName = userElement.textContent;
-        const existingUser = checkExistingSidebarUser(sidebarLeft, '.user', userName);
+        const existingUser = checkExistingSidebarElement(sidebarLeft, '.user', userName);
         existingUser ?? setUserToSidebarList(privateMessagesUserList, userElement.getAttribute('data-id'), userName);
         fetchMessages(e);
       }
@@ -128,12 +129,11 @@ const domContentLoaded = () => {
     }
   }
 
-  // Refactor to reusable for users and rooms
-  const checkExistingSidebarUser = (sidebarElement, classOfUserElements, userName) => {
-    const sidebar = sidebarElement.querySelectorAll(classOfUserElements);
+  const checkExistingSidebarElement = (sidebarElement, classOfElements, text) => {
+    const sidebar = sidebarElement.querySelectorAll(classOfElements);
     const setSidebarArray = [...sidebar];
-    const existingUser = setSidebarArray.find(element => element.textContent === userName);
-    return existingUser;
+    const existingElement = setSidebarArray.find(element => element.textContent === text);
+    return existingElement;
   };
 
   const onFormSubmission = e => {
@@ -176,7 +176,6 @@ const domContentLoaded = () => {
       e.target.style.cursor = 'text';
     }
   });
-
   chatForm.addEventListener('submit', onFormSubmission);
 
   inputSearch.addEventListener('keyup', function (e) {
@@ -189,6 +188,41 @@ const domContentLoaded = () => {
       } else {
         userElement.style.display = 'none';
       }
+    });
+  });
+
+  joinRoomForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const room = this.querySelector('input')
+      .value
+      .trim()
+      .toLowerCase();
+
+    if (!room) {
+      alert('Room is empty');
+      return this.reset();
+    }
+
+    if (checkExistingSidebarElement(sidebarLeft, '.room', room)) {
+      return;
+    }
+
+    socket.emit('join', {
+      username: messageAuthor,
+      room
+    }, (error, username, room, users) => {
+
+      privateMessage = false;
+      sendMessageTo = room;
+
+      userMessagesContainer.innerHTML = '';
+      setJoinedRoom(sidebarLeft, '.rooms-list', room);
+      roomUsersList.innerHTML = '';
+      fetchUsers(users, roomUsersList);
+      setNotificationMessage(username);
+      chatForm.querySelector('#input-msg').focus();
+      this.reset();
+
     });
   });
 
@@ -211,7 +245,7 @@ const domContentLoaded = () => {
     displayPrivateUserList(privateUsersContainer);
 
     if (sendMessageTo !== senderId) {
-      if (!checkExistingSidebarUser(sidebarLeft, '.user', from)) {
+      if (!checkExistingSidebarElement(sidebarLeft, '.user', from)) {
         new Audio('sound/notification.wav').play();
         setUserToSidebarList(privateMessagesUserList, senderId, from);
         setNotificationMessage(userMessagesContainer, `New private message from ${from}`);
