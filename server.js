@@ -33,7 +33,7 @@ io.on('connection', (socket) => {
       id,
       username
     });
-    //io.to(room).emit('joinMessage', `${username} has joined`);
+
     socket.broadcast.to(room).emit('joinMessage', `${username} has joined`);
     ack(null, username, room, setUsersList);
   });

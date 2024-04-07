@@ -62,6 +62,19 @@ const domContentLoaded = () => {
   const button = chatForm.querySelector('button');
 
   // Functions
+  const moveScrollbar = () => {
+    const mssgsContainerScrollHeight = userMessagesContainer.scrollHeight;
+    const lastMessage = userMessagesContainer.lastElementChild;
+    const lastMessageMarginBottom = parseInt(getComputedStyle(lastMessage).marginBottom);
+    const lastMessageHeight = lastMessage.offsetHeight + lastMessageMarginBottom;
+    const mssgsContainerCurrentPos = userMessagesContainer.offsetHeight;
+    const scrollOffsetPosition = mssgsContainerCurrentPos + userMessagesContainer.scrollTop;
+
+    if (Math.round(mssgsContainerScrollHeight - lastMessageHeight - 1) <= Math.round(scrollOffsetPosition)) {
+      userMessagesContainer.scrollTop = mssgsContainerScrollHeight;
+    }
+  };
+
   const setUserMessage = (element, author, message) => {
     element.innerHTML += `
       <p class="chat-message">${htmlEncode(author)}: ${htmlEncode(message)}</p>
@@ -159,6 +172,7 @@ const domContentLoaded = () => {
         }, (messages) => {
           const lastMessage = messages.slice(-1)[0];
           setUserMessage(userMessagesContainer, lastMessage.from, lastMessage.message);
+          moveScrollbar();
         });
       }
       message.value = '';
@@ -204,7 +218,8 @@ const domContentLoaded = () => {
     }
 
     if (checkExistingSidebarElement(sidebarLeft, '.room', room)) {
-      return;
+      alert('You are already in that room');
+      return this.reset();
     }
 
     socket.emit('join', {
@@ -219,10 +234,10 @@ const domContentLoaded = () => {
       setJoinedRoom(sidebarLeft, '.rooms-list', room);
       roomUsersList.innerHTML = '';
       fetchUsers(users, roomUsersList);
+
       setNotificationMessage(username);
       chatForm.querySelector('#input-msg').focus();
       this.reset();
-
     });
   });
 
@@ -230,12 +245,14 @@ const domContentLoaded = () => {
   socket.on('joinMessage', msg => {
     if (!privateMessage) {
       setNotificationMessage(userMessagesContainer, msg);
+      moveScrollbar();
     }
   });
 
   socket.on('room message', ({ from, message }) => {
     if (!privateMessage) {
       setUserMessage(userMessagesContainer, from, message);
+      moveScrollbar();
     }
   });
 
@@ -249,9 +266,11 @@ const domContentLoaded = () => {
         new Audio('sound/notification.wav').play();
         setUserToSidebarList(privateMessagesUserList, senderId, from);
         setNotificationMessage(userMessagesContainer, `New private message from ${from}`);
+        moveScrollbar();
       }
     } else {
       setUserMessage(userMessagesContainer, from, message);
+      moveScrollbar();
     }
   });
 
