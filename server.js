@@ -4,7 +4,8 @@ const { setUser,
   getUserByUsername,
   setMessage,
   getPrivateMessages,
-  getRoomMessages
+  getRoomMessages,
+  removeUser
 } = require('./functions/users');
 
 const http = require('http');
@@ -20,6 +21,8 @@ const io = socketio(server);
 
 io.on('connection', (socket) => {
 
+  let socketRooms = [];
+
   socket.on('join', (obj, ack) => {
     const { id, username, room, error } = setUser(socket.id, obj.username, obj.room);
     const setUsersList = setRoomUsers(room);
@@ -29,12 +32,14 @@ io.on('connection', (socket) => {
     }
 
     socket.join(room);
+    socketRooms = [...socket.rooms].slice(1);
+
     io.to(room).emit('setUserInRoomList', {
       id,
       username
     });
 
-    socket.broadcast.to(room).emit('joinMessage', `${username} has joined`);
+    socket.broadcast.to(room).emit('notification message', `${username} has joined`);
     ack(null, username, room, setUsersList);
   });
 
@@ -73,8 +78,13 @@ io.on('connection', (socket) => {
     ack(users, messages);
   });
 
-  io.on('disconnect', () => {
-
+  socket.on('disconnect', (reason) => {
+    const { id, username } = getUserById(socket.id);
+    removeUser(id);
+    socketRooms.forEach(room => {
+      io.to(room).emit('notification message', `${username} has left. Reason: ${reason}`);
+      io.to(room).emit('update sidebar', socket.id);
+    });
   });
 });
 

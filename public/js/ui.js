@@ -133,11 +133,13 @@ const domContentLoaded = () => {
         const existingUser = checkExistingSidebarElement(sidebarLeft, '.user', userName);
         existingUser ?? setUserToSidebarList(privateMessagesUserList, userElement.getAttribute('data-id'), userName);
         fetchMessages(e);
+        document.title = `Node Chat: ${userName}`;
       }
     } else if (e.target.parentElement.classList.contains('room')) {
       privateMessage = false;
       const room = e.target.textContent;
       sendMessageTo = room;
+      document.title = `Node Chat: ${room}`;
       fetchMessages(e);
     }
   }
@@ -242,7 +244,7 @@ const domContentLoaded = () => {
   });
 
   // Socket.io Events
-  socket.on('joinMessage', msg => {
+  socket.on('notification message', msg => {
     if (!privateMessage) {
       setNotificationMessage(userMessagesContainer, msg);
       moveScrollbar();
@@ -276,5 +278,11 @@ const domContentLoaded = () => {
 
   socket.on('setUserInRoomList', ({ id, username }) => {
     setUserToSidebarList(roomUsersList, id, username);
+  });
+
+  socket.on('update sidebar', (id) => {
+    const sidebarRoomUsersArray = [...roomUsersList.querySelectorAll('.user')];
+    const user = sidebarRoomUsersArray.find(userElement => userElement.firstElementChild.getAttribute('data-id') === id);
+    user.remove();
   });
 };

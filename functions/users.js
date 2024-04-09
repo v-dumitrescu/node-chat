@@ -61,6 +61,12 @@ const getPrivateMessages = (to, from) => {
   });
 };
 
+const removeUser = (id) => {
+  const userIndex = users.findIndex(user => user.id === id);
+  users.splice(userIndex, 1);
+  console.log(users);
+};
+
 module.exports = {
   setUser,
   setRoomUsers,
@@ -68,5 +74,6 @@ module.exports = {
   getUserByUsername,
   setMessage,
   getRoomMessages,
-  getPrivateMessages
+  getPrivateMessages,
+  removeUser
 };
