@@ -90,8 +90,8 @@ const domContentLoaded = () => {
       userMessagesContainer.innerHTML = '';
 
       socket.emit('getPrivateMessages', {
-        to: sendMessageTo,
-        from: messageAuthor
+        receiverId: sendMessageTo,
+        senderId: socket.id
       }, (messages) => {
         messages.forEach(msg => {
           setUserMessage(userMessagesContainer, msg.from, msg.message);
@@ -119,6 +119,7 @@ const domContentLoaded = () => {
   const onItemOfSidebarClick = (e) => {
 
     if (e.target.parentElement.classList.contains('user')) {
+      chatForm.querySelector('#input-msg').focus();
       const userElement = e.target;
 
       if (userElement.getAttribute('data-id') === socket.id) {
@@ -130,12 +131,14 @@ const domContentLoaded = () => {
         privateMessage = true;
         displayPrivateUserList(privateUsersContainer);
         const userName = userElement.textContent;
-        const existingUser = checkExistingSidebarElement(sidebarLeft, '.user', userName);
-        existingUser ?? setUserToSidebarList(privateMessagesUserList, userElement.getAttribute('data-id'), userName);
+        const userId = userElement.getAttribute('data-id');
+        const existingUser = checkExistingSidebarElement(sidebarLeft, '.user', userId);
+        existingUser ?? setUserToSidebarList(privateMessagesUserList, userId, userName);
         fetchMessages(e);
         document.title = `Node Chat: ${userName}`;
       }
     } else if (e.target.parentElement.classList.contains('room')) {
+      chatForm.querySelector('#input-msg').focus();
       privateMessage = false;
       const room = e.target.textContent;
       sendMessageTo = room;
@@ -144,10 +147,16 @@ const domContentLoaded = () => {
     }
   }
 
-  const checkExistingSidebarElement = (sidebarElement, classOfElements, text) => {
+  const checkExistingSidebarElement = (sidebarElement, classOfElements, identifier) => {
     const sidebar = sidebarElement.querySelectorAll(classOfElements);
     const setSidebarArray = [...sidebar];
-    const existingElement = setSidebarArray.find(element => element.textContent === text);
+    let existingElement;
+    if (classOfElements === '.user') {
+      existingElement = setSidebarArray.find(element => element.firstElementChild.getAttribute('data-id') === identifier);
+    } else {
+      existingElement = setSidebarArray.find(element => element.textContent === identifier);
+    }
+
     return existingElement;
   };
 
@@ -166,11 +175,19 @@ const domContentLoaded = () => {
       to: sendMessageTo,
       from: messageAuthor,
       message: message.value
-    }, (to, from) => {
+    }, (error, to, from) => {
       if (privateMessage) {
+        if (error) {
+          setNotificationMessage(userMessagesContainer, error);
+          message.value = '';
+          message.focus();
+          button.removeAttribute('disabled');
+          button.classList.remove('button-disabled');
+          return;
+        }
         socket.emit('getPrivateMessages', {
-          to: sendMessageTo,
-          from
+          receiverId: sendMessageTo,
+          senderId: socket.id
         }, (messages) => {
           const lastMessage = messages.slice(-1)[0];
           setUserMessage(userMessagesContainer, lastMessage.from, lastMessage.message);
@@ -234,10 +251,11 @@ const domContentLoaded = () => {
 
       userMessagesContainer.innerHTML = '';
       setJoinedRoom(sidebarLeft, '.rooms-list', room);
+      document.title = `Node Chat: ${room}`;
       roomUsersList.innerHTML = '';
       fetchUsers(users, roomUsersList);
 
-      setNotificationMessage(username);
+      setNotificationMessage(userMessagesContainer, `${username} has joined`);
       chatForm.querySelector('#input-msg').focus();
       this.reset();
     });
@@ -258,13 +276,13 @@ const domContentLoaded = () => {
     }
   });
 
-  socket.on('private message', ({ senderId, messages }) => {
+  socket.on('private message', ({ senderId, senderUsername, messages }) => {
 
     const { from, message } = messages.slice(-1)[0];
     displayPrivateUserList(privateUsersContainer);
 
     if (sendMessageTo !== senderId) {
-      if (!checkExistingSidebarElement(sidebarLeft, '.user', from)) {
+      if (!checkExistingSidebarElement(sidebarLeft, '.user', senderId)) {
         new Audio('sound/notification.wav').play();
         setUserToSidebarList(privateMessagesUserList, senderId, from);
         setNotificationMessage(userMessagesContainer, `New private message from ${from}`);
@@ -282,7 +300,17 @@ const domContentLoaded = () => {
 
   socket.on('update sidebar', (id) => {
     const sidebarRoomUsersArray = [...roomUsersList.querySelectorAll('.user')];
-    const user = sidebarRoomUsersArray.find(userElement => userElement.firstElementChild.getAttribute('data-id') === id);
-    user.remove();
+    const sidebarPrivateUsersArray = [...privateMessagesUserList.querySelectorAll('.user')];
+
+    if (sidebarPrivateUsersArray.length) {
+      sidebarPrivateUsersArray
+        .find(userElement => userElement.firstElementChild.getAttribute('data-id') === id)
+        .classList
+        .add('disconnected');
+    }
+
+    sidebarRoomUsersArray
+      .find(userElement => userElement.firstElementChild.getAttribute('data-id') === id)
+      .remove();
   });
 };

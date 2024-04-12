@@ -137,3 +137,7 @@ form button {
 .button-disabled {
   color: #ccc;
 }
+
+.user.disconnected a {
+  color: #ff2a18;
+}

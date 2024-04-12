@@ -35,6 +35,11 @@ const setRoomUsers = (room) => {
   return setUsers;
 };
 
+const getRoomsOfUser = (id) => {
+  return users.filter(user => user.id === id)
+    .map(user => user.room);
+};
+
 const getUserById = id => {
   return users.find(user => user.id === id);
 };
@@ -43,8 +48,10 @@ const getUserByUsername = username => {
   return users.find(user => user.username === username);
 };
 
-const setMessage = (to, from, message) => {
+const setMessage = (senderId, receiverId, to, from, message) => {
   messages.push({
+    senderId,
+    receiverId,
     to,
     from,
     message
@@ -55,16 +62,15 @@ const getRoomMessages = (room) => {
   return messages.filter(msg => msg.to === room);
 };
 
-const getPrivateMessages = (to, from) => {
+const getPrivateMessages = (senderId, receiverId) => {
   return messages.filter(msg => {
-    return msg.from === from && msg.to === to || msg.from === to && msg.to === from;
+    return msg.senderId === senderId && msg.receiverId === receiverId || msg.senderId === receiverId && msg.receiverId === senderId;
   });
 };
 
 const removeUser = (id) => {
   const userIndex = users.findIndex(user => user.id === id);
   users.splice(userIndex, 1);
-  console.log(users);
 };
 
 module.exports = {
@@ -75,5 +81,6 @@ module.exports = {
   setMessage,
   getRoomMessages,
   getPrivateMessages,
+  getRoomsOfUser,
   removeUser
 };

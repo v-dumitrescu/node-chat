@@ -5,7 +5,8 @@ const { setUser,
   setMessage,
   getPrivateMessages,
   getRoomMessages,
-  removeUser
+  removeUser,
+  getRoomsOfUser
 } = require('./functions/users');
 
 const http = require('http');
@@ -21,8 +22,6 @@ const io = socketio(server);
 
 io.on('connection', (socket) => {
 
-  let socketRooms = [];
-
   socket.on('join', (obj, ack) => {
     const { id, username, room, error } = setUser(socket.id, obj.username, obj.room);
     const setUsersList = setRoomUsers(room);
@@ -32,7 +31,6 @@ io.on('connection', (socket) => {
     }
 
     socket.join(room);
-    socketRooms = [...socket.rooms].slice(1);
 
     io.to(room).emit('setUserInRoomList', {
       id,
@@ -44,31 +42,34 @@ io.on('connection', (socket) => {
   });
 
   socket.on('room message', ({ to, from, message }, ack) => {
+    const { id } = getUserByUsername(from);
     io.to(to).emit('room message', {
       from,
       message
     });
-    setMessage(to, from, message);
+    setMessage(id, null, to, from, message);
     ack(to, from);
   });
 
   socket.on('private message', ({ to, from, message }, ack) => {
     const id = to;
-    const { username } = getUserById(id);
-    setMessage(username, from, message);
-    const { id: senderId } = getUserByUsername(from);
-    const messages = getPrivateMessages(username, from);
+    if (!getUserById(id)) {
+      return ack('User disconnected', undefined, undefined);
+    }
+    const { id: receiverId, username: receiverUsername } = getUserById(id);
+    const { id: senderId, username: senderUsername } = getUserByUsername(from);
+    setMessage(senderId, receiverId, receiverUsername, senderUsername, message);
+    const messages = getPrivateMessages(senderId, receiverId);
     socket.to(id).emit('private message', {
       senderId,
+      senderUsername,
       messages
     });
-    ack(username, from);
+    ack(undefined, receiverUsername, from);
   });
 
-  socket.on('getPrivateMessages', ({ to, from }, ack) => {
-    const id = to;
-    const { username } = getUserById(id);
-    const messages = getPrivateMessages(username, from);
+  socket.on('getPrivateMessages', ({ receiverId, senderId }, ack) => {
+    const messages = getPrivateMessages(receiverId, senderId);
     ack(messages);
   });
 
@@ -80,8 +81,9 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', (reason) => {
     const { id, username } = getUserById(socket.id);
+    const rooms = getRoomsOfUser(id);
     removeUser(id);
-    socketRooms.forEach(room => {
+    rooms.forEach(room => {
       io.to(room).emit('notification message', `${username} has left. Reason: ${reason}`);
       io.to(room).emit('update sidebar', socket.id);
     });
